@@ -5,6 +5,16 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\AdminDashboardController;
 
+Route::get('/migrate', function() {
+    try {
+        // We use the full \Illuminate\Support\Facades\Artisan path here
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        return "Database migrated successfully! Output: " . \Illuminate\Support\Facades\Artisan::output();
+    } catch (\Exception $e) {
+        return "Error migrating: " . $e->getMessage();
+    }
+});
+
 // 1. HOME PAGE
 Route::get('/', function () {
     return Inertia::render('welcome', [
