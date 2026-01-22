@@ -17,3 +17,4 @@ RUN a2enmod rewrite
 
 # Give permissions to storage
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/cache
+
