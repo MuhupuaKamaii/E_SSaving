@@ -1,5 +1,5 @@
 # Use a high-performance PHP/Apache image
-FROM richarvey/php-apache-heroku:8.2
+FROM richarvey/php-apache-heroku:latest
 
 # Move into the Laravel folder
 COPY . /var/www/app
