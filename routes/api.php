@@ -99,11 +99,15 @@ Route::post('/test', function (Request $request) {
     return response()->json(['reply' => $reply]);
 });
 
-function sendSmsNotification($to, $message) {
-    Log::info("SMS TO $to: $message");
+if (!function_exists('sendSmsNotification')) {
+    function sendSmsNotification($to, $message) {
+        Log::info("SMS TO $to: $message");
+    }
 }
 
-function processAirtimePayout($phone, $amount) {
-    Log::info("AIRTIME PAYOUT: Sending N$$amount to $phone via MTC/Telecom Gateway");
-    return true; 
+if (!function_exists('processAirtimePayout')) {
+    function processAirtimePayout($phone, $amount) {
+        Log::info("AIRTIME PAYOUT: Sending N$$amount to $phone via MTC/Telecom Gateway");
+        return true;
+    }
 }
