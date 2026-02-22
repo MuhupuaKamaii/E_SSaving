@@ -27,6 +27,8 @@ jobs:
           php-version: ${{ matrix.php-version }}
           tools: composer:v2
           coverage: xdebug
+          # Enable commonly-required extensions for Laravel + in-memory SQLite testing
+          extensions: pdo, pdo_sqlite, sqlite, mbstring, xml, intl, bcmath, curl, openssl, zip
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -48,6 +50,11 @@ jobs:
 
       - name: Generate Application Key
         run: php artisan key:generate
+
+      - name: Show PHP info
+        run: |
+          php -v
+          php -m | sort
 
       - name: Tests
         run: ./vendor/bin/pest
