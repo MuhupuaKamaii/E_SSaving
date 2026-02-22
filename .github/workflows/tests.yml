@@ -42,8 +42,18 @@ jobs:
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
+      - name: Show Composer Installed Packages
+        run: composer show -i
+
       - name: Build Assets
         run: npm run build
+
+      - name: List Built Assets
+        run: |
+          echo "--- public/build ---"
+          ls -la public/build || true
+          echo "--- resources/js ---"
+          ls -la resources/js || true
 
       - name: Copy Environment File
         run: cp .env.example .env
@@ -56,5 +66,8 @@ jobs:
           php -v
           php -m | sort
 
+      - name: Show Pest version
+        run: ./vendor/bin/pest --version || true
+
       - name: Tests
-        run: ./vendor/bin/pest
+        run: ./vendor/bin/pest -vvv
