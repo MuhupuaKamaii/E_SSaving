@@ -34,13 +34,14 @@ Route::post('/test', function (Request $request) {
             'status'  => 'fee_deducted'
         ]);
 
-        $feeAlert = "\n(Note: N$0.50 inactivity fee applied)";
+        // Fee alert shown inline (no newlines) so SMS replies are single-line friendly.
+        $feeAlert = " (Note: N$0.50 inactivity fee applied)";
         $userBalance->save(); 
     }
 
     // 3. COMMAND: BALANCE
     if ($incomingMessage == 'BALANCE') {
-        $reply = "VAULT BALANCE: N$".number_format($userBalance->amount, 2) . $feeAlert;
+    $reply = "Vault balance: N$".number_format($userBalance->amount, 2) . $feeAlert;
         $status = 'balance_check';
     }
 
@@ -50,25 +51,25 @@ Route::post('/test', function (Request $request) {
         $amount = (isset($parts[1]) && is_numeric($parts[1])) ? (float)$parts[1] : 0;
         $type = isset($parts[2]) ? strtoupper($parts[2]) : 'CASH';
 
-        if ($type == 'CASH' && $amount < 10) {
-            $reply = "Min withdraw: N$10.00." . $feeAlert;
-            $status = 'denied_low_amount';
-        } elseif ($amount > $userBalance->amount) {
-            $reply = "Insufficient funds. Bal: N$".number_format($userBalance->amount, 2) . $feeAlert;
-            $status = 'denied_no_funds';
-        } else {
-            $userGets = $amount - ($amount * 0.065); 
-            $userBalance->amount -= $amount;
-
-            if ($type === 'AIRTIME') {
-                $payoutSuccess = processAirtimePayout($phone, $userGets);
-                $status = $payoutSuccess ? "Withdrawn_AIRTIME_Success" : "Withdrawn_AIRTIME_Failed";
+            if ($type == 'CASH' && $amount < 10) {
+                $reply = "Minimum withdraw is N$10.00." . $feeAlert;
+                $status = 'denied_low_amount';
+            } elseif ($amount > $userBalance->amount) {
+                $reply = "Insufficient funds. Balance: N$".number_format($userBalance->amount, 2) . $feeAlert;
+                $status = 'denied_no_funds';
             } else {
-                $status = "Withdrawn_CASH_Pending";
-            }
+                $userGets = $amount - ($amount * 0.065);
+                $userBalance->amount -= $amount;
 
-            $reply = "SUCCESS: $type\nSent: N$".number_format($userGets, 2)."\nNew Bal: N$".number_format($userBalance->amount, 2) . $feeAlert;
-        }
+                if ($type === 'AIRTIME') {
+                    $payoutSuccess = processAirtimePayout($phone, $userGets);
+                    $status = $payoutSuccess ? "Withdrawn_AIRTIME_Success" : "Withdrawn_AIRTIME_Failed";
+                    $reply = "Success: AIRTIME. Sent: N$".number_format($userGets, 2).". New balance: N$".number_format($userBalance->amount, 2) . $feeAlert;
+                } else {
+                    $status = "Withdrawn_CASH_Pending";
+                    $reply = "Withdrawal requested: CASH N$".number_format($amount, 2).". Amount after fee: N$".number_format($userGets, 2).". New balance: N$".number_format($userBalance->amount, 2) . $feeAlert;
+                }
+            }
     }
 
     // 5. COMMAND: DEPOSIT
@@ -76,7 +77,7 @@ Route::post('/test', function (Request $request) {
         $saveAmount = (float)$incomingMessage;
         if ($saveAmount > 0) {
             $userBalance->amount += $saveAmount;
-            $reply = "SAVED: N$".number_format($saveAmount, 2)."\nTotal Bal: N$".number_format($userBalance->amount, 2) . $feeAlert;
+        $reply = "Saved N$".number_format($saveAmount, 2) . ". Total balance: N$".number_format($userBalance->amount, 2) . $feeAlert;
             $status = 'deposit';
         } else {
             $reply = "Error: Invalid amount.";
@@ -86,7 +87,7 @@ Route::post('/test', function (Request $request) {
 
     // 6. DEFAULT: MENU
     else {
-        $reply = "E-SAVING VAULT\n- Send amount to SAVE\n- 'WITHDRAW [amt] [CASH/AIR]'\n- 'BALANCE'";
+    $reply = "E-SAVING VAULT: Send an amount to SAVE to deposit. Use 'WITHDRAW [amt] [CASH/AIR]' to withdraw, or send 'BALANCE' to check your balance.";
         $status = 'help_request';
     }
 
